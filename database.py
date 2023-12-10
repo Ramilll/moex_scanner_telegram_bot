@@ -4,6 +4,7 @@ from sqlalchemy import create_engine, Column, Float, Integer, String
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 Base = declarative_base()
+
 # Всего 2 таблица- Portfolio с user_id, названиями акции и их ценой когда пользователь подписался на акцию
 # и Stocks с названиями акции и текущими ценами
 class Portfolio(Base):
@@ -21,6 +22,13 @@ class Stock(Base):
     symbol = Column(String, unique=True, nullable=False)
     current_price = Column(Float, default=0.0)
 
+engine = create_engine('sqlite:///stock_bot.db', echo=True)
+
+# Создает таблицы
+Base.metadata.create_all(engine)
+
+# Создает Session
+Session = sessionmaker(bind=engine)
 # Функция, которая крутится бесконечно и обнавляет цены акции раз в 60 секунд
 def update_stock_prices():
     try:

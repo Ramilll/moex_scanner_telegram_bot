@@ -1,17 +1,16 @@
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, ConversationHandler, CallbackQueryHandler
 
-# Replace 'YOUR_BOT_TOKEN' with your actual bot token
 TOKEN = '6774933123:AAE4fbID1LhzJY4vJiTGoaHG17mM7tGXHwc'
 
-# Database of stock names (replace with your actual database)
-stock_database = ["Stock1", "Stock2", "Stock3"]
+# Mock database of stock names (replace with your actual database)
+mock_stock_database = ["Stock1", "Stock2", "Stock3"]
 
 # Dictionary to store user subscriptions
 user_subscriptions = {}
 
 def start(update: Update, context: CallbackContext) -> None:
-    # Create a custom keyboard with "Мои подписки", "Подписаться", and "Отписаться" buttons
+    # Create a custom keyboard with "Мои подписки" and "Подписаться" buttons
     keyboard = [
         [KeyboardButton("Мои подписки"), KeyboardButton("Подписаться")],
     ]
@@ -33,7 +32,7 @@ def check_stock(update: Update, context: CallbackContext) -> None:
         subscribe(update, context)
     else:
         # Check if the user input is in the stock database
-        if user_input in stock_database:
+        if user_input in mock_stock_database:
             subscriptions = user_subscriptions.get(chat_id, [])
             if user_input in subscriptions:
                 update.message.reply_text(f"Вы уже подписаны на акцию {user_input}")

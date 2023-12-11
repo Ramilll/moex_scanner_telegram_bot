@@ -72,14 +72,14 @@ class StocksPricesManager:
     def add_stock_price(self, symbol: str, current_price: float):
         session = self.Session()
         try:
-            # Check if the stock symbol already exists
+            # Проверить, существует ли уже тикер
             existing_stock = session.query(StockPrice).filter_by(symbol=symbol).first()
 
             if existing_stock:
                 # If the stock exists, update its current price
                 existing_stock.current_price = current_price
             else:
-                # If the stock does not exist, add it to the table
+                # Если тикер не существует, добавляет его в таблицу
                 stock = StockPrice(symbol=symbol, current_price=current_price)
                 session.add(stock)
 

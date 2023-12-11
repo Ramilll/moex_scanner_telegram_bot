@@ -76,7 +76,7 @@ class StocksPricesManager:
             existing_stock = session.query(StockPrice).filter_by(symbol=symbol).first()
 
             if existing_stock:
-                # If the stock exists, update its current price
+                # Если тикер существует, обновите ее текущую цену
                 existing_stock.current_price = current_price
             else:
                 # Если тикер не существует, добавляет его в таблицу

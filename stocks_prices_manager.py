@@ -4,9 +4,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from typing import List, Dict
 import asyncio
 
-
 Base = declarative_base()
-
 
 class StockPrice(Base):
     __tablename__ = 'stocks_prices'
@@ -24,7 +22,11 @@ class StocksPricesManager:
     def create_tables(self):
         Base.metadata.create_all(self.engine, checkfirst=True)
 
-# Обновляет цены всех акции на таблице stocks_prices каждый 60 секунд
+    # Можно через метод start_update_all_stocks асинхронно обновляет цены тикеров
+    def start_update_all_stocks(self, interval_seconds: int = 60):
+        asyncio.create_task(self.update_all_stocks(interval_seconds))
+        
+    # Обновляет цены всех акции на таблице stocks_prices
     async def update_all_stocks(self, interval_seconds: int = 60):
         while True:
             try:
@@ -33,15 +35,19 @@ class StocksPricesManager:
 
                 # Обновляет текущие цены на каждую акцию
                 for symbol in symbols:
-                    stock_data = yf.download(symbol, period='1d', interval='1m')
-                    current_price = stock_data['Close'].iloc[-1]
+                    try:
+                        stock_data = yf.download(symbol, period='1d', interval='1m')
+                        current_price = stock_data['Close'].iloc[-1]
 
-                    # Если акция существует, Обновляет ее текущую цену
-                    if self.stock_exists(symbol):
-                        self.add_stock_price(symbol, current_price)
-                    else:
-                        # Если акция не существует, добавляет его в таблицу
-                        self.add_stock_price(symbol, current_price)
+                        # Если акция существует, Обновляет ее текущую цену
+                        if self.stock_exists(symbol):
+                            self.add_stock_price(symbol, current_price)
+                        else:
+                            # Если акция не существует, добавляет его в таблицу
+                            self.add_stock_price(symbol, current_price)
+
+                    except Exception as stock_error:
+                        print(f"Error updating stock {symbol} prices: {stock_error}")
 
             except Exception as e:
                 print(f"Error updating stock prices: {e}")
@@ -49,7 +55,7 @@ class StocksPricesManager:
             # Ждет на 60 секунд
             await asyncio.sleep(interval_seconds)
 
-    #Получает все названий тикеров
+        # Получает все названий тикеров
     def get_all_stock_symbols(self) -> List[str]:
         session = self.Session()
         try:
@@ -59,7 +65,7 @@ class StocksPricesManager:
         finally:
             session.close()
 
-# Получает цены всех тикеров
+    # Получает цены всех тикеров
     def get_stock_prices(self) -> Dict[str, float]:
         session = self.Session()
         try:
@@ -68,7 +74,7 @@ class StocksPricesManager:
         finally:
             session.close()
 
-# Добавляет цену тикера
+    # Добавляет цену тикера
     def add_stock_price(self, symbol: str, current_price: float):
         session = self.Session()
         try:
@@ -87,7 +93,7 @@ class StocksPricesManager:
         finally:
             session.close()
 
-# Проверяет, существует ли тикер в бд
+    # Проверяет, существует ли тикер в бд
     def stock_exists(self, symbol: str) -> bool:
         session = self.Session()
         try:

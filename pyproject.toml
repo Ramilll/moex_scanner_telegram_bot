@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "moex_scanner_telegramm_bot"
+version = "0.1.0"
+description = "A tool to send stock updates in telegramm"
+authors = ["Ramil Nazmeev <rrnazmeev_1@edu.hse.ru>"]
+
+include = []
+
+[tool.poetry.dependencies]
+python = "^3.11.6"
+SQLAlchemy = "2.0.23"
+yfinance = "0.2.33"
+python-telegram-bot = "13.13"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''

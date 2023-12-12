@@ -1,8 +1,9 @@
-import yfinance as yf
-from sqlalchemy import create_engine, Column, Float, String, Integer
-from sqlalchemy.orm import sessionmaker, declarative_base
-from typing import List, Dict
 import asyncio
+from typing import Dict, List
+
+import yfinance as yf
+from sqlalchemy import Column, Float, Integer, String, create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 Base = declarative_base()
 

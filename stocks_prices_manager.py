@@ -19,7 +19,8 @@ class StockPrice(Base):
 class StocksPricesManager:
     def __init__(self, database_url="sqlite:///stocks_prices.db"):
         self.engine = create_engine(
-            database_url, echo=True, connect_args={"check_same_thread": False})
+            database_url, echo=True, connect_args={"check_same_thread": False}
+        )
         self.Session = sessionmaker(bind=self.engine)
         self.create_tables()
 

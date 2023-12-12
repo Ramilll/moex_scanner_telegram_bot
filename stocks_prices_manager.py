@@ -6,16 +6,20 @@ import asyncio
 
 Base = declarative_base()
 
+
 class StockPrice(Base):
-    __tablename__ = 'stocks_prices'
+    __tablename__ = "stocks_prices"
 
     id = Column(Integer, primary_key=True)
     symbol = Column(String, unique=True, nullable=False)
-    current_price = Column(Float, default=0.0)
+    current_price = Column(Float, default=0.00)
+
 
 class StocksPricesManager:
-    def __init__(self, database_url='sqlite:///stocks_prices.db'):
-        self.engine = create_engine(database_url, echo=True, connect_args={'check_same_thread': False})
+    def __init__(self, database_url="sqlite:///stocks_prices.db"):
+        self.engine = create_engine(
+            database_url, echo=True, connect_args={"check_same_thread": False}
+        )
         self.Session = sessionmaker(bind=self.engine)
         self.create_tables()
 
@@ -25,7 +29,7 @@ class StocksPricesManager:
     # Можно через метод start_update_all_stocks асинхронно обновляет цены тикеров
     def start_update_all_stocks(self, interval_seconds: int = 60):
         asyncio.create_task(self.update_all_stocks(interval_seconds))
-        
+
     # Обновляет цены всех акции на таблице stocks_prices
     async def update_all_stocks(self, interval_seconds: int = 60):
         while True:
@@ -36,8 +40,8 @@ class StocksPricesManager:
                 # Обновляет текущие цены на каждую акцию
                 for symbol in symbols:
                     try:
-                        stock_data = yf.download(symbol, period='1d', interval='1m')
-                        current_price = stock_data['Close'].iloc[-1]
+                        stock_data = yf.download(symbol, period="1d", interval="1m")
+                        current_price = stock_data["Close"].iloc[-1]
 
                         # Если акция существует, Обновляет ее текущую цену
                         if self.stock_exists(symbol):
@@ -56,6 +60,7 @@ class StocksPricesManager:
             await asyncio.sleep(interval_seconds)
 
         # Получает все названий тикеров
+
     def get_all_stock_symbols(self) -> List[str]:
         session = self.Session()
         try:
@@ -69,7 +74,10 @@ class StocksPricesManager:
     def get_stock_prices(self) -> Dict[str, float]:
         session = self.Session()
         try:
-            prices = {stock.symbol: stock.current_price for stock in session.query(StockPrice).all()}
+            prices = {
+                stock.symbol: stock.current_price
+                for stock in session.query(StockPrice).all()
+            }
             return prices
         finally:
             session.close()

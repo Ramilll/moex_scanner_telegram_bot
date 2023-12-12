@@ -4,3 +4,4 @@ repos:
     hooks:
       - id: black
         language_version: python3.11.6  # Optional: specify the Python version
+        files: \.py$  # This line ensures only Python files are formatted

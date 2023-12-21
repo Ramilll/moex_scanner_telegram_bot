@@ -96,3 +96,14 @@ class SubscriptionsManager:
             return [str(symbol) for symbol in subscriptions]
         finally:
             session.close()
+
+    # Получить подписку всех пользователей на какую-то акцию
+    def get_all_subscribed_users_to_stock(self, stock_symbol: str) -> List[int]:
+        session = self.Session()
+        try:
+            # Для извлечения ид пользователей
+            users = [sub.user_id for sub in
+                     session.query(UserSubscription.user_id).filter_by(stock_symbol=stock_symbol).all()]
+            return users
+        finally:
+            session.close()

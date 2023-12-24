@@ -14,6 +14,8 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 
+TOKEN = "6738600960:AAGrtayAHkcjUr74HnNB_L4wc4oR0z2bydY"
+
 
 class CryptoBot:
     def __init__(self, token):
@@ -136,6 +138,5 @@ class CryptoBot:
 
 
 if __name__ == "__main__":
-    token = "6774933123:AAE4fbID1LhzJY4vJiTGoaHG17mM7tGXHwc"
-    bot = CryptoBot(token)
+    bot = CryptoBot(TOKEN)
     bot.run()

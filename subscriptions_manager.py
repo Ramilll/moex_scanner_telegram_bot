@@ -37,13 +37,12 @@ class SubscriptionsManager:
             database_url, echo=True, connect_args={"check_same_thread": False}
         )
         self.Session = sessionmaker(bind=self.engine)
-        self.create_tables()
+        self._create_tables()
 
-    def create_tables(self) -> None:
+    def _create_tables(self) -> None:
         # Создание необходимых таблиц в базе данных
         Base.metadata.create_all(self.engine, checkfirst=True)
         crypto_manager = CryptoPricesManager()
-        crypto_manager.create_tables()
 
     async def subscribe_user_to_crypto(
         self, user_id: int, crypto_symbol: str

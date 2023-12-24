@@ -26,12 +26,12 @@ class CryptoPricesManager:
             database_url, echo=True, connect_args={"check_same_thread": False}
         )
         self.Session = sessionmaker(bind=self.engine)
-        self.create_tables()
+        self._create_tables()
         self.crypto_fetcher = CoinmarketcapPriceFetcher(
             api_key=API_KEY, num_fetch_coins=200
         )
 
-    def create_tables(self):
+    def _create_tables(self):
         Base.metadata.create_all(self.engine, checkfirst=True)
 
     # Можно через метод start_update_all_crypto асинхронно обновляет цены тикеров

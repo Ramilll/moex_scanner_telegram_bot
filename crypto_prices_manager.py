@@ -1,5 +1,5 @@
 import asyncio
-from typing import Dict, List
+from typing import Dict, Set
 
 import yfinance as yf
 from sqlalchemy import Column, Float, Integer, String, create_engine
@@ -31,13 +31,15 @@ class CryptoPricesManager:
             api_key=API_KEY, num_fetch_coins=200
         )
         self.interval_seconds = interval_seconds
+        self.cnt_update_all_crypto_calls = 0
+        self._last_cnt_update_all_crypto_calls = None
 
     def _create_tables(self):
         Base.metadata.create_all(self.engine, checkfirst=True)
 
     # Можно через метод start_update_all_crypto асинхронно обновляет цены тикеров
     def start_update_all_crypto(self):
-        asyncio.create_task(self.update_all_crypto(self.interval_seconds))
+        asyncio.create_task(self.update_all_crypto())
 
     # Обновляет цены всех акции на таблице crypto_prices
     async def update_all_crypto(self):
@@ -46,6 +48,7 @@ class CryptoPricesManager:
                 price_by_symbol = self.crypto_fetcher.fetch_top_coins_prices()
                 for symbol in price_by_symbol:
                     self.add_crypto_price(symbol, price_by_symbol[symbol])
+                self.cnt_update_all_crypto_calls += 1
 
             except Exception as e:
                 print(f"Error updating crypto prices: {e}")
@@ -54,24 +57,28 @@ class CryptoPricesManager:
             await asyncio.sleep(self.interval_seconds)
 
     # Получает все названий тикеров
-    def get_all_crypto_symbols(self) -> List[str]:
-        session = self.Session()
-        try:
-            cryptos = session.query(CryptoPrice).all()
-            symbols = [str(crypto.symbol) for crypto in cryptos]
-            return symbols
-        finally:
-            session.close()
+    def get_all_crypto_symbols(self) -> Set[str]:
+        return self.get_crypto_prices().keys()
+
+    # Проверяет, существует ли тикер в бд
+    def crypto_exists(self, symbol: str) -> bool:
+        return symbol in self.get_all_crypto_symbols()
 
     # Получает цены всех тикеров
     def get_crypto_prices(self) -> Dict[str, float]:
+        # if nothing is updated, return the last price_by_symbol
+        if self._last_cnt_update_all_crypto_calls == self.cnt_update_all_crypto_calls:
+            return self._last_price_by_symbol
+
         session = self.Session()
         try:
-            prices = {
+            price_by_symbol = {
                 crypto.symbol: crypto.current_price
                 for crypto in session.query(CryptoPrice).all()
             }
-            return prices
+            self._last_price_by_symbol = price_by_symbol
+            self._last_cnt_update_all_crypto_calls = self.cnt_update_all_crypto_calls
+            return price_by_symbol
         finally:
             session.close()
 
@@ -93,16 +100,5 @@ class CryptoPricesManager:
                 session.add(crypto)
 
             session.commit()
-        finally:
-            session.close()
-
-    # Проверяет, существует ли тикер в бд
-    def crypto_exists(self, symbol: str) -> bool:
-        session = self.Session()
-        try:
-            existing_crypto = (
-                session.query(CryptoPrice).filter_by(symbol=symbol).first()
-            )
-            return existing_crypto is not None
         finally:
             session.close()

@@ -1,6 +1,5 @@
 from typing import Dict, List
 
-import yfinance as yf
 from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 

@@ -26,7 +26,6 @@ class StockBot:
         /subscribe <имена-акций> <через-пробел> – подписаться на акции <имена-акций> <через-пробел>. Если Вы уже подписаны на такие акции, повторно мы Вас подписывать не будем.\n
         /unsubscribe <имена-акций> <через-пробел> – отписаться от акции <имена-акций> <через-пробел>. Если Вы на какие-то из не подписаны, мы сообщим Вам об этом.\n
         /my_stocks - вывод списка акций, на которые Вы подписаны.\n
-        /stock_info <имя-акции> - Рамиль расскажет что тут будет.\n
         /help - вывод этого сообщения.
         """
 
@@ -130,7 +129,6 @@ class StockBot:
         dp.add_handler(CommandHandler("subscribe", self.subscribe))
         dp.add_handler(CommandHandler("unsubscribe", self.unsubscribe))
         dp.add_handler(CommandHandler("my_stocks", self.my_stocks))
-        # dp.add_handler(CommandHandler("info", self.info))
 
         updater.start_polling()
         updater.idle()

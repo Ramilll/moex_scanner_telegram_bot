@@ -71,9 +71,10 @@ class CryptoBot:
                         text="Вы уже подписаны на акцию {}.".format(crypto_name),
                     )
                 case SubscriptionUserToCryptoResult.Ok:
+                    current_crypto_price = self.notification_dispatcher.init_subscription_get_price(chat_id, crypto_name)
                     context.bot.send_message(
                         chat_id=chat_id,
-                        text="Подписали Вас на акцию {}.".format(crypto_name),
+                        text="Подписали Вас на акцию {}, текущая цена - {}.".format(crypto_name, current_crypto_price),
                     )
 
     def unsubscribe(self, update: Update, context: CallbackContext) -> None:

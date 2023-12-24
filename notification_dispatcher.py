@@ -90,7 +90,7 @@ class NotificationDispatcher:
             user_id, crypto_symbol
         )
 
-    def init_subscription_get_price(self, user_id: int, crypto_symbol: str):
+    def init_subscription_get_price(self, user_id: int, crypto_symbol: str) -> float:
         # we call this function after subscribe_user_to_crypto was called (if it was successfull)
         last_symbol_price = self.crypto_prices_manager.get_crypto_prices()[
             crypto_symbol

@@ -31,7 +31,7 @@ class NotificationDispatcher:
     def unsubscribe_user_from_crypto(
         self, user_id: int, crypto_symbol: str
     ) -> UnsubscriptionUserFromCryptoResult:
-        return self.subscriptions_manager.unsubscribe_user_to_crypto(
+        return self.subscriptions_manager.unsubscribe_user_from_crypto(
             user_id, crypto_symbol
         )
 

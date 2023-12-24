@@ -55,7 +55,9 @@ class NotificationDispatcher:
         cur_prices_by_symbol = self.crypto_prices_manager.get_crypto_prices()
 
         for symbol in cur_prices_by_symbol:
-            for subscriber in self.subscriptions_manager.get_subscribers(symbol):
+            for (
+                subscriber
+            ) in self.subscriptions_manager.get_all_subscribed_users_to_crypto(symbol):
                 last_update_result = self.update_result_by_user_id.get(
                     subscriber.user_id
                 )

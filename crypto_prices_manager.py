@@ -21,7 +21,7 @@ class CryptoPrice(Base):
 
 
 class CryptoPricesManager:
-    def __init__(self, database_url="sqlite:///crypto_prices.db"):
+    def __init__(self, database_url="sqlite:///crypto_prices.db", interval_seconds=60):
         self.engine = create_engine(
             database_url, echo=True, connect_args={"check_same_thread": False}
         )
@@ -30,16 +30,17 @@ class CryptoPricesManager:
         self.crypto_fetcher = CoinmarketcapPriceFetcher(
             api_key=API_KEY, num_fetch_coins=200
         )
+        self.interval_seconds = interval_seconds
 
     def _create_tables(self):
         Base.metadata.create_all(self.engine, checkfirst=True)
 
     # Можно через метод start_update_all_crypto асинхронно обновляет цены тикеров
-    def start_update_all_crypto(self, interval_seconds: int = 60):
-        asyncio.create_task(self.update_all_crypto(interval_seconds))
+    def start_update_all_crypto(self):
+        asyncio.create_task(self.update_all_crypto(self.interval_seconds))
 
     # Обновляет цены всех акции на таблице crypto_prices
-    async def update_all_crypto(self, interval_seconds: int = 60):
+    async def update_all_crypto(self):
         while True:
             try:
                 price_by_symbol = self.crypto_fetcher.fetch_top_coins_prices()
@@ -50,7 +51,7 @@ class CryptoPricesManager:
                 print(f"Error updating crypto prices: {e}")
 
             # Ждет на 60 секунд
-            await asyncio.sleep(interval_seconds)
+            await asyncio.sleep(self.interval_seconds)
 
     # Получает все названий тикеров
     def get_all_crypto_symbols(self) -> List[str]:

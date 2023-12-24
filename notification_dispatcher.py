@@ -35,9 +35,6 @@ class NotificationDispatcher:
             user_id, crypto_symbol
         )
 
-    def symbol_exists(self, crypto_symbol: str) -> bool:
-        return self.crypto_prices_manager.symbol_exists(crypto_symbol)
-
     def get_last_crypto_price(self, crypto_symbol: str):
         return self.last_crypto_prices[crypto_symbol]
 

@@ -42,16 +42,14 @@ class SubscriptionsManager:
     def _create_tables(self) -> None:
         # Создание необходимых таблиц в базе данных
         Base.metadata.create_all(self.engine, checkfirst=True)
-        crypto_manager = CryptoPricesManager()
+        self._crypto_manager = CryptoPricesManager()
 
     async def subscribe_user_to_crypto(
         self, user_id: int, crypto_symbol: str
     ) -> SubscriptionUserToCryptoResult:
         session = self.Session()
         try:
-            crypto_manager = CryptoPricesManager()
-
-            if not crypto_manager.crypto_exists(crypto_symbol):
+            if not self._crypto_manager.crypto_exists(crypto_symbol):
                 return SubscriptionUserToCryptoResult.NoSuchCrypto
 
             existing_subscription = (

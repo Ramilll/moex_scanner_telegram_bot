@@ -1,22 +1,22 @@
-from typing import Dict, List
 from enum import Enum
+from typing import Dict, List
 
 import yfinance as yf
 from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-from stocks_prices_manager import StocksPricesManager
+from coinmarketcap_fetcher import CryptoPricesManager
 
 Base = declarative_base()
 
 
-class SubscriptionUserToStockResult(Enum):
+class SubscriptionUserToCryptoResult(Enum):
     Ok = 1
-    NoSuchStock = 2
+    NoSuchCrypto = 2
     AlreadySubscribed = 3
 
 
-class UnsubscriptionUserToStockResult(Enum):
+class UnsubscriptionUserToCryptoResult(Enum):
     Ok = 1
     NotSubscribed = 2
 
@@ -27,7 +27,7 @@ class UserSubscription(Base):
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, nullable=False)
-    stock_symbol = Column(String, nullable=False)
+    crypto_symbol = Column(String, nullable=False)
 
 
 class SubscriptionsManager:
@@ -42,67 +42,69 @@ class SubscriptionsManager:
     def create_tables(self) -> None:
         # Создание необходимых таблиц в базе данных
         Base.metadata.create_all(self.engine, checkfirst=True)
-        stock_manager = StocksPricesManager()
-        stock_manager.create_tables()
+        crypto_manager = CryptoPricesManager()
+        crypto_manager.create_tables()
 
-    async def subscribe_user_to_stock(
-        self, user_id: int, stock_symbol: str
-    ) -> SubscriptionUserToStockResult:
+    async def subscribe_user_to_crypto(
+        self, user_id: int, crypto_symbol: str
+    ) -> SubscriptionUserToCryptoResult:
         session = self.Session()
         try:
-            stock_manager = StocksPricesManager()
+            crypto_manager = CryptoPricesManager()
 
-            if not stock_manager.stock_exists(stock_symbol):
-                return SubscriptionUserToStockResult.NoSuchStock
+            if not crypto_manager.crypto_exists(crypto_symbol):
+                return SubscriptionUserToCryptoResult.NoSuchCrypto
 
             existing_subscription = (
                 session.query(UserSubscription)
-                .filter_by(user_id=user_id, stock_symbol=stock_symbol)
+                .filter_by(user_id=user_id, crypto_symbol=crypto_symbol)
                 .first()
             )
             if existing_subscription:
-                return SubscriptionUserToStockResult.AlreadySubscribed
+                return SubscriptionUserToCryptoResult.AlreadySubscribed
 
             # Подписываем пользователя
-            subscription = UserSubscription(user_id=user_id, stock_symbol=stock_symbol)
+            subscription = UserSubscription(
+                user_id=user_id, crypto_symbol=crypto_symbol
+            )
             session.merge(subscription)
             session.commit()
-            return SubscriptionUserToStockResult.Ok
+            return SubscriptionUserToCryptoResult.Ok
 
         finally:
             session.close()
-            return SubscriptionUserToStockResult.Ok
+            return SubscriptionUserToCryptoResult.Ok
 
     # Отмена подписки пользователя на акцию
-    def unsubscribe_user_from_stock(
-        self, user_id: int, stock_symbol: str
-    ) -> UnsubscriptionUserToStockResult:
+    def unsubscribe_user_from_crypto(
+        self, user_id: int, crypto_symbol: str
+    ) -> UnsubscriptionUserToCryptoResult:
         session = self.Session()
         try:
             subscription = (
                 session.query(UserSubscription)
-                .filter_by(user_id=user_id, stock_symbol=stock_symbol)
+                .filter_by(user_id=user_id, crypto_symbol=crypto_symbol)
                 .first()
             )
             if not subscription:
-                return UnsubscriptionUserToStockResult.NotSubscribed
+                return UnsubscriptionUserToCryptoResult.NotSubscribed
             # Отмена подписки пользователя на акцию
             session.query(UserSubscription).filter_by(
-                user_id=user_id, stock_symbol=stock_symbol
+                user_id=user_id, crypto_symbol=crypto_symbol
             ).delete()
             session.commit()
-            return UnsubscriptionUserToStockResult.Ok
+            return UnsubscriptionUserToCryptoResult.Ok
 
         finally:
             session.close()
-            return UnsubscriptionUserToStockResult.Ok
+            return UnsubscriptionUserToCryptoResult.Ok
 
     # Получение списка акций, на которые подписан пользователь
     def get_user_subscriptions(self, user_id: int) -> List[str]:
         session = self.Session()
         try:
             subscriptions = [
-                sub.stock_symbol
+                sub.crypto_symbol
                 for sub in session.query(UserSubscription)
                 .filter_by(user_id=user_id)
                 .all()
@@ -112,14 +114,14 @@ class SubscriptionsManager:
             session.close()
 
     # Получить подписку всех пользователей на какую-то акцию
-    def get_all_subscribed_users_to_stock(self, stock_symbol: str) -> List[int]:
+    def get_all_subscribed_users_to_crypto(self, crypto_symbol: str) -> List[int]:
         session = self.Session()
         try:
             # Для извлечения ид пользователей
             users = [
                 sub.user_id
                 for sub in session.query(UserSubscription.user_id)
-                .filter_by(stock_symbol=stock_symbol)
+                .filter_by(crypto_symbol=crypto_symbol)
                 .all()
             ]
             return users

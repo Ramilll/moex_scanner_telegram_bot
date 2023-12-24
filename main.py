@@ -1,14 +1,12 @@
-from telegram import Update
-from telegram.ext import (
-    CallbackContext,
-    CommandHandler,
-    Updater,
-)
 import logging
+
+from telegram import Update
+from telegram.ext import CallbackContext, CommandHandler, Updater
+
 from subscriptions_manager import (
     SubscriptionsManager,
-    SubscriptionUserToStockResult,
-    UnsubscriptionUserToStockResult,
+    SubscriptionUserToCryptoResult,
+    UnsubscriptionUserToCryptoResult,
 )
 
 logging.basicConfig(
@@ -16,16 +14,17 @@ logging.basicConfig(
 )
 
 
-class StockBot:
+class CryptoBot:
     def __init__(self, token):
         self.token = token
-        self.mock_stock_database = ["Stock1", "Stock2", "Stock3"]
+        self.mock_crypto_database = ["Crypto1", "Crypto2", "Crypto3"]
         self.user_subscriptions: dict[str, set[str]] = {}
         self.subscriptions_manager = SubscriptionsManager()
         self.kHelpText = """Вот что я умею:\n
         /subscribe <имена-акций> <через-пробел> – подписаться на акции <имена-акций> <через-пробел>. Если Вы уже подписаны на такие акции, повторно мы Вас подписывать не будем.\n
         /unsubscribe <имена-акций> <через-пробел> – отписаться от акции <имена-акций> <через-пробел>. Если Вы на какие-то из не подписаны, мы сообщим Вам об этом.\n
-        /my_stocks - вывод списка акций, на которые Вы подписаны.\n
+        /my_crypto - вывод списка акций, на которые Вы подписаны.\n
+        /crypto_info <имя-акции> - Рамиль расскажет что тут будет.\n
         /help - вывод этого сообщения.
         """
 
@@ -52,28 +51,28 @@ class StockBot:
             )
             return
 
-        for stock_name in context.args:
-            subscription_result = self.subscriptions_manager.subscribe_user_to_stock(
-                chat_id, stock_name
+        for crypto_name in context.args:
+            subscription_result = self.subscriptions_manager.subscribe_user_to_crypto(
+                chat_id, crypto_name
             )
             match subscription_result:
-                case SubscriptionUserToStockResult.NoSuchStock:
+                case SubscriptionUserToCryptoResult.NoSuchCrypto:
                     context.bot.send_message(
                         chat_id=chat_id,
                         text="К сожалению, мы не следим за акцией {}.".format(
-                            stock_name
+                            crypto_name
                         ),
                     )
-                case SubscriptionUserToStockResult.AlreadySubscribed:
+                case SubscriptionUserToCryptoResult.AlreadySubscribed:
                     context.bot.send_message(
                         chat_id=chat_id,
-                        text="Вы уже подписаны на акцию {}.".format(stock_name),
+                        text="Вы уже подписаны на акцию {}.".format(crypto_name),
                     )
-                case SubscriptionUserToStockResult.Ok:
-                    self.user_subscriptions[chat_id].add(stock_name)
+                case SubscriptionUserToCryptoResult.Ok:
+                    self.user_subscriptions[chat_id].add(crypto_name)
                     context.bot.send_message(
                         chat_id=chat_id,
-                        text="Подписали Вас на акцию {}.".format(stock_name),
+                        text="Подписали Вас на акцию {}.".format(crypto_name),
                     )
 
     def unsubscribe(self, update: Update, context: CallbackContext) -> None:
@@ -89,25 +88,25 @@ class StockBot:
             )
             return
 
-        for stock_name in context.args:
+        for crypto_name in context.args:
             unsubscription_result = (
-                self.subscriptions_manager.unsubscribe_user_to_stock(
-                    chat_id, stock_name
+                self.subscriptions_manager.unsubscribe_user_to_crypto(
+                    chat_id, crypto_name
                 )
             )
             match unsubscription_result:
-                case UnsubscriptionUserToStockResult.NotSubscribed:
+                case UnsubscriptionUserToCryptoResult.NotSubscribed:
                     context.bot.send_message(
                         chat_id=chat_id,
-                        text="Вы не подписаны на акцию {}.".format(stock_name),
+                        text="Вы не подписаны на акцию {}.".format(crypto_name),
                     )
-                case UnsubscriptionUserToStockResult.Ok:
+                case UnsubscriptionUserToCryptoResult.Ok:
                     context.bot.send_message(
                         chat_id=chat_id,
-                        text="Отписали Вас от акции {}.".format(stock_name),
+                        text="Отписали Вас от акции {}.".format(crypto_name),
                     )
 
-    def my_stocks(self, update: Update, context: CallbackContext) -> None:
+    def my_crypto(self, update: Update, context: CallbackContext) -> None:
         chat_id = update.message.chat_id
         subscriptions = self.subscriptions_manager.get_user_subscriptions(chat_id)
         if subscriptions:
@@ -128,7 +127,8 @@ class StockBot:
         dp.add_handler(CommandHandler("help", self.help))
         dp.add_handler(CommandHandler("subscribe", self.subscribe))
         dp.add_handler(CommandHandler("unsubscribe", self.unsubscribe))
-        dp.add_handler(CommandHandler("my_stocks", self.my_stocks))
+        dp.add_handler(CommandHandler("my_crypto", self.my_crypto))
+        # dp.add_handler(CommandHandler("info", self.info))
 
         updater.start_polling()
         updater.idle()
@@ -136,5 +136,5 @@ class StockBot:
 
 if __name__ == "__main__":
     token = "6774933123:AAE4fbID1LhzJY4vJiTGoaHG17mM7tGXHwc"
-    bot = StockBot(token)
+    bot = CryptoBot(token)
     bot.run()

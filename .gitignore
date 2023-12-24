@@ -1,3 +1,4 @@
 *pyc
 poetry.lock
-stocks_prices.db
+crypto_prices.db
+test.ipynb

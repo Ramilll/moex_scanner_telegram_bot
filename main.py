@@ -3,8 +3,9 @@ import logging
 from telegram import Update
 from telegram.ext import CallbackContext, CommandHandler, Updater
 
-from subscriptions_manager import (
-    SubscriptionsManager,
+
+from notification_dispatcher import (
+    NotificationDispatcher,
     SubscriptionUserToCryptoResult,
     UnsubscriptionUserToCryptoResult,
 )
@@ -19,7 +20,7 @@ class CryptoBot:
         self.token = token
         self.mock_crypto_database = ["Crypto1", "Crypto2", "Crypto3"]
         self.user_subscriptions: dict[str, set[str]] = {}
-        self.subscriptions_manager = SubscriptionsManager()
+        self.subscriptions_manager = NotificationDispatcher.SubscriptionsManager()
         self.kHelpText = """Вот что я умею:\n
         /subscribe <имена-акций> <через-пробел> – подписаться на акции <имена-акций> <через-пробел>. Если Вы уже подписаны на такие акции, повторно мы Вас подписывать не будем.\n
         /unsubscribe <имена-акций> <через-пробел> – отписаться от акции <имена-акций> <через-пробел>. Если Вы на какие-то из не подписаны, мы сообщим Вам об этом.\n

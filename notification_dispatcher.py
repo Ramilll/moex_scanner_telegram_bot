@@ -1,9 +1,9 @@
 from crypto_prices_manager import CryptoPricesManager
-from subscriptions_manager import SubscriptionsManager
 from subscription_enum_result import (
     SubscriptionUserToCryptoResult,
     UnsubscriptionUserToCryptoResult,
 )
+from subscriptions_manager import SubscriptionsManager
 
 
 class NotificationDispatcher:

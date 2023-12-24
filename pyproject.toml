@@ -7,7 +7,7 @@ authors = ["Ramil Nazmeev <rrnazmeev_1@edu.hse.ru>"]
 include = []
 
 [tool.poetry.dependencies]
-python = "^3.11.6"
+python = "3.11.6"
 SQLAlchemy = "2.0.23"
 python-telegram-bot = "13.13"
 requests = "^2.31.0"

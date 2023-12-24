@@ -37,7 +37,7 @@ class SubscriptionsManager:
     ) -> SubscriptionUserToCryptoResult:
         session = self.Session()
         try:
-            if not self._crypto_manager.crypto_exists(crypto_symbol):
+            if not self._crypto_manager.symbol_exists(crypto_symbol):
                 return SubscriptionUserToCryptoResult.NoSuchCrypto
 
             existing_subscription = (

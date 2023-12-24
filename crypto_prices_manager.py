@@ -47,7 +47,7 @@ class CryptoPricesManager:
         return self.get_crypto_prices().keys()
 
     # Проверяет, существует ли тикер в бд
-    def crypto_exists(self, symbol: str) -> bool:
+    def symbol_exists(self, symbol: str) -> bool:
         return symbol in self.get_all_crypto_symbols()
 
     # Получает цены всех тикеров

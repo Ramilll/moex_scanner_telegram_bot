@@ -5,6 +5,11 @@ from telegram.ext import (
     Updater,
 )
 import logging
+from subscriptions_manager import (
+    SubscriptionsManager,
+    SubscriptionUserToStockResult,
+    UnsubscriptionUserToStockResult,
+)
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -16,7 +21,8 @@ class StockBot:
         self.token = token
         self.mock_stock_database = ["Stock1", "Stock2", "Stock3"]
         self.user_subscriptions: dict[str, set[str]] = {}
-        self.kStartHelpText = """Вот что я умею:\n
+        self.subscriptions_manager = SubscriptionsManager()
+        self.kHelpText = """Вот что я умею:\n
         /subscribe <имена-акций> <через-пробел> – подписаться на акции <имена-акций> <через-пробел>. Если Вы уже подписаны на такие акции, повторно мы Вас подписывать не будем.\n
         /unsubscribe <имена-акций> <через-пробел> – отписаться от акции <имена-акций> <через-пробел>. Если Вы на какие-то из не подписаны, мы сообщим Вам об этом.\n
         /my_stocks - вывод списка акций, на которые Вы подписаны.\n
@@ -27,13 +33,12 @@ class StockBot:
     def start(self, update: Update, context: CallbackContext) -> None:
         context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="Привет! Я – лучший бот-помощник по акциям. " + self.kStartHelpText,
+            text="Привет! Я лучший бот-помощник по акциям Yahoo! Finance. "
+            + self.kHelpText,
         )
 
     def help(self, update: Update, context: CallbackContext) -> None:
-        context.bot.send_message(
-            chat_id=update.effective_chat.id, text=self.kStartHelpText
-        )
+        context.bot.send_message(chat_id=update.effective_chat.id, text=self.kHelpText)
 
     def subscribe(self, update: Update, context: CallbackContext) -> None:
         chat_id = update.effective_chat.id
@@ -46,34 +51,35 @@ class StockBot:
                 chat_id=chat_id,
                 text="Пожалуйста, отправьте сообщение в формате: /subscribe <имена-акций> <через-пробел>",
             )
-        else:
-            for stock_name in context.args:
-                if stock_name in self.mock_stock_database:
-                    if chat_id not in self.user_subscriptions:
-                        self.user_subscriptions[chat_id] = set([])
-                    if stock_name in self.user_subscriptions[chat_id]:
-                        context.bot.send_message(
-                            chat_id=chat_id,
-                            text="Вы уже подписаны на акцию {}.".format(stock_name),
-                        )
-                    else:
-                        self.user_subscriptions[chat_id].add(stock_name)
-                        context.bot.send_message(
-                            chat_id=chat_id,
-                            text="Подписали Вас на акцию {}.".format(stock_name),
-                        )
-                else:
+            return
+
+        for stock_name in context.args:
+            subscription_result = self.subscriptions_manager.subscribe_user_to_stock(
+                chat_id, stock_name
+            )
+            match subscription_result:
+                case SubscriptionUserToStockResult.NoSuchStock:
                     context.bot.send_message(
                         chat_id=chat_id,
                         text="К сожалению, мы не следим за акцией {}.".format(
                             stock_name
                         ),
                     )
+                case SubscriptionUserToStockResult.AlreadySubscribed:
+                    context.bot.send_message(
+                        chat_id=chat_id,
+                        text="Вы уже подписаны на акцию {}.".format(stock_name),
+                    )
+                case SubscriptionUserToStockResult.Ok:
+                    self.user_subscriptions[chat_id].add(stock_name)
+                    context.bot.send_message(
+                        chat_id=chat_id,
+                        text="Подписали Вас на акцию {}.".format(stock_name),
+                    )
 
     def unsubscribe(self, update: Update, context: CallbackContext) -> None:
         chat_id = update.effective_chat.id
         if not context.args:
-            # если в команде не указан аргумент
             context.bot.send_message(
                 chat_id=chat_id,
                 text="Вы не указали имя акций, от которых хотите отписаться.",
@@ -82,17 +88,21 @@ class StockBot:
                 chat_id=chat_id,
                 text="Пожалуйста, отправьте сообщение в формате: /unsubscribe <имена-акций> <через-пробел>",
             )
-        else:
-            for stock_name in context.args:
-                if chat_id not in self.user_subscriptions:
-                    self.user_subscriptions[chat_id] = set([])
-                if stock_name not in self.user_subscriptions[chat_id]:
+            return
+
+        for stock_name in context.args:
+            unsubscription_result = (
+                self.subscriptions_manager.unsubscribe_user_to_stock(
+                    chat_id, stock_name
+                )
+            )
+            match unsubscription_result:
+                case UnsubscriptionUserToStockResult.NotSubscribed:
                     context.bot.send_message(
                         chat_id=chat_id,
                         text="Вы не подписаны на акцию {}.".format(stock_name),
                     )
-                else:
-                    self.user_subscriptions[chat_id].remove(stock_name)
+                case UnsubscriptionUserToStockResult.Ok:
                     context.bot.send_message(
                         chat_id=chat_id,
                         text="Отписали Вас от акции {}.".format(stock_name),
@@ -100,7 +110,7 @@ class StockBot:
 
     def my_stocks(self, update: Update, context: CallbackContext) -> None:
         chat_id = update.message.chat_id
-        subscriptions = self.user_subscriptions.get(chat_id, {})
+        subscriptions = self.subscriptions_manager.get_user_subscriptions(chat_id)
         if subscriptions:
             context.bot.send_message(
                 chat_id=chat_id,

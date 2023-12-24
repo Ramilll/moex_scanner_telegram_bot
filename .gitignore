@@ -2,3 +2,4 @@
 poetry.lock
 crypto_prices.db
 test.ipynb
+subscription_data.db

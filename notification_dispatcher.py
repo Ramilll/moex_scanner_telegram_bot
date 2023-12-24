@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Dict, List
 
 from crypto_prices_manager import CryptoPricesManager
 from subscription_enum_result import (
@@ -10,7 +11,7 @@ from subscriptions_manager import SubscriptionsManager
 
 class SubscrberUpdateResult:
     def __init__(self):
-        self.last_sent_price_by_symbol = {}
+        self.last_sent_price_by_symbol = {}  # Dict[str, float]
 
     def is_symbol_sent(self, symbol: str):
         return symbol in self.last_sent_price_by_symbol
@@ -40,10 +41,13 @@ class NotificationDispatcher:
 
         self.MIN_PCT_CHANGE_TO_NOTIFY = 0.1  # (in percents)
 
-    def _initial_update(self):
+    def _initial_update(self) -> None:
         self.crypto_prices_manager.update_all_crypto()
 
-    def update(self):
+    def get_crypto_symbols(self) -> List[str]:
+        return self.crypto_prices_manager.get_crypto_symbols()
+
+    def update(self) -> List[NotificationUpdate]:
         self.crypto_prices_manager.update_all_crypto()
 
         notifications = []  # List[NotificationUpdate]

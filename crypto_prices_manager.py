@@ -56,8 +56,8 @@ class CryptoPricesManager:
     def get_all_crypto_symbols(self) -> List[str]:
         session = self.Session()
         try:
-            crypto = session.query(CryptoPrice).all()
-            symbols = [str(crypto.symbol) for crypto in crypto]
+            cryptos = session.query(CryptoPrice).all()
+            symbols = [str(crypto.symbol) for crypto in cryptos]
             return symbols
         finally:
             session.close()

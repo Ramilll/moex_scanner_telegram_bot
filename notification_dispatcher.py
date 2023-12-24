@@ -34,7 +34,7 @@ class NotificationDispatcher:
     def __init__(self) -> None:
         self.crypto_prices_manager = CryptoPricesManager()
         self.subscriptions_manager = SubscriptionsManager()
-        self.update_result_by_user_id = {}
+        self.update_result_by_user_id = {}  # Dict[int, SubscrberUpdateResult]
 
         self._initial_update()
 
@@ -46,7 +46,7 @@ class NotificationDispatcher:
     def update(self):
         self.crypto_prices_manager.update_all_crypto()
 
-        notifications = []
+        notifications = []  # List[NotificationUpdate]
 
         cur_prices_by_symbol = self.crypto_prices_manager.get_crypto_prices()
 
@@ -81,7 +81,6 @@ class NotificationDispatcher:
                     )
                     last_update_result.set_last_sent_price(symbol, cur_price)
 
-        # TODO(rnazmeev): send notifications about price changes
         return notifications
 
     def subscribe_user_to_crypto(

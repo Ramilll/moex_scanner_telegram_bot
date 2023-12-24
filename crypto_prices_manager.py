@@ -1,7 +1,6 @@
 import asyncio
 from typing import Dict, Set
 
-import yfinance as yf
 from sqlalchemy import Column, Float, Integer, String, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 

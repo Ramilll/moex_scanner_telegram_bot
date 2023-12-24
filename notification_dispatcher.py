@@ -9,12 +9,16 @@ class NotificationDispatcher:
 
     def update(self):
         self.crypto_prices_manager.update_all_crypto()
+        self.last_crypto_prices = self.crypto_prices_manager.get_crypto_prices()
         # TODO(rnazmeev): send notifications about price changes
 
     def subscribe_user_to_crypto(self, user_id: int, crypto_symbol: str):
         return self.subscriptions_manager.subscribe_user_to_crypto(
             user_id, crypto_symbol
         )
+
+    def get_last_crypto_price(self, crypto_symbol: str):
+        return self.last_crypto_prices[crypto_symbol]
 
     def unsubscribe_user_to_crypto(self, user_id: int, crypto_symbol: str):
         return self.subscriptions_manager.unsubscribe_user_to_crypto(

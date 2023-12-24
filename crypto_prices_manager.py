@@ -1,4 +1,3 @@
-import asyncio
 from typing import Dict, Set
 
 from sqlalchemy import Column, Float, Integer, String, create_engine
@@ -20,7 +19,7 @@ class CryptoPrice(Base):
 
 
 class CryptoPricesManager:
-    def __init__(self, database_url="sqlite:///crypto_prices.db", interval_seconds=60):
+    def __init__(self, database_url="sqlite:///crypto_prices.db"):
         self.engine = create_engine(
             database_url, echo=True, connect_args={"check_same_thread": False}
         )
@@ -29,31 +28,20 @@ class CryptoPricesManager:
         self.crypto_fetcher = CoinmarketcapPriceFetcher(
             api_key=API_KEY, num_fetch_coins=200
         )
-        self.interval_seconds = interval_seconds
         self.cnt_update_all_crypto_calls = 0
         self._last_cnt_update_all_crypto_calls = None
 
-    def _create_tables(self):
-        Base.metadata.create_all(self.engine, checkfirst=True)
-
-    # Можно через метод start_update_all_crypto асинхронно обновляет цены тикеров
-    def start_update_all_crypto(self):
-        asyncio.create_task(self.update_all_crypto())
-
     # Обновляет цены всех акции на таблице crypto_prices
-    async def update_all_crypto(self):
+    def update_all_crypto(self):
         while True:
             try:
                 price_by_symbol = self.crypto_fetcher.fetch_top_coins_prices()
                 for symbol in price_by_symbol:
-                    self.add_crypto_price(symbol, price_by_symbol[symbol])
+                    self._add_crypto_price(symbol, price_by_symbol[symbol])
                 self.cnt_update_all_crypto_calls += 1
 
             except Exception as e:
                 print(f"Error updating crypto prices: {e}")
-
-            # Ждет на interval_seconds секунд
-            await asyncio.sleep(self.interval_seconds)
 
     # Получает все названий тикеров
     def get_all_crypto_symbols(self) -> Set[str]:
@@ -81,8 +69,11 @@ class CryptoPricesManager:
         finally:
             session.close()
 
+    def _create_tables(self):
+        Base.metadata.create_all(self.engine, checkfirst=True)
+
     # Добавляет цену тикера
-    def add_crypto_price(self, symbol: str, current_price: float):
+    def _add_crypto_price(self, symbol: str, current_price: float):
         session = self.Session()
         try:
             # Проверить, существует ли уже тикер

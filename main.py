@@ -3,9 +3,8 @@ import logging
 from telegram import Update
 from telegram.ext import CallbackContext, CommandHandler, Updater
 
-
-from notification_dispatcher import (
-    NotificationDispatcher,
+from notification_dispatcher import NotificationDispatcher
+from subscriptions_manager import (
     SubscriptionUserToCryptoResult,
     UnsubscriptionUserToCryptoResult,
 )
@@ -22,7 +21,7 @@ class CryptoBot:
         self.token = token
         self.mock_crypto_database = ["Crypto1", "Crypto2", "Crypto3"]
         self.user_subscriptions: dict[str, set[str]] = {}
-        self.subscriptions_manager = NotificationDispatcher.SubscriptionsManager()
+        self.notification_dispatcher = NotificationDispatcher()
         self.kHelpText = """Вот что я умею:\n
         /subscribe <имена-акций> <через-пробел> – подписаться на акции <имена-акций> <через-пробел>. Если Вы уже подписаны на такие акции, повторно мы Вас подписывать не будем.\n
         /unsubscribe <имена-акций> <через-пробел> – отписаться от акции <имена-акций> <через-пробел>. Если Вы на какие-то из не подписаны, мы сообщим Вам об этом.\n
@@ -55,7 +54,7 @@ class CryptoBot:
             return
 
         for crypto_name in context.args:
-            subscription_result = self.subscriptions_manager.subscribe_user_to_crypto(
+            subscription_result = self.notification_dispatcher.subscribe_user_to_crypto(
                 chat_id, crypto_name
             )
             match subscription_result:
@@ -93,7 +92,7 @@ class CryptoBot:
 
         for crypto_name in context.args:
             unsubscription_result = (
-                self.subscriptions_manager.unsubscribe_user_to_crypto(
+                self.notification_dispatcher.unsubscribe_user_to_crypto(
                     chat_id, crypto_name
                 )
             )
@@ -111,7 +110,7 @@ class CryptoBot:
 
     def my_crypto(self, update: Update, context: CallbackContext) -> None:
         chat_id = update.message.chat_id
-        subscriptions = self.subscriptions_manager.get_user_subscriptions(chat_id)
+        subscriptions = self.notification_dispatcher.get_user_subscriptions(chat_id)
         if subscriptions:
             context.bot.send_message(
                 chat_id=chat_id,

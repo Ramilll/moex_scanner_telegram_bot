@@ -44,7 +44,7 @@ class SubscriptionsManager:
         Base.metadata.create_all(self.engine, checkfirst=True)
         self._crypto_manager = CryptoPricesManager()
 
-    async def subscribe_user_to_crypto(
+    def subscribe_user_to_crypto(
         self, user_id: int, crypto_symbol: str
     ) -> SubscriptionUserToCryptoResult:
         session = self.Session()

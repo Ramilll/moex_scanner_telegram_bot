@@ -60,8 +60,7 @@ class StocksPricesManager:
             # Ждет на 60 секунд
             await asyncio.sleep(interval_seconds)
 
-        # Получает все названий тикеров
-
+    # Получает все названий тикеров
     def get_all_stock_symbols(self) -> List[str]:
         session = self.Session()
         try:

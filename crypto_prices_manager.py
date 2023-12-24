@@ -50,7 +50,7 @@ class CryptoPricesManager:
             except Exception as e:
                 print(f"Error updating crypto prices: {e}")
 
-            # Ждет на 60 секунд
+            # Ждет на interval_seconds секунд
             await asyncio.sleep(self.interval_seconds)
 
     # Получает все названий тикеров

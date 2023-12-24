@@ -5,7 +5,7 @@ import yfinance as yf
 from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-from coinmarketcap_fetcher import CryptoPricesManager
+from crypto_prices_manager import CryptoPricesManager
 
 Base = declarative_base()
 

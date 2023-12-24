@@ -1,12 +1,24 @@
 from typing import Dict, List
+from enum import Enum
 
 import yfinance as yf
-from sqlalchemy import Column, ForeignKey, Integer, String, create_engine
+from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-from stocks_prices_manager import StockPrice, StocksPricesManager
+from stocks_prices_manager import StocksPricesManager
 
 Base = declarative_base()
+
+
+class SubscriptionUserToStockResult(Enum):
+    Ok = 1
+    NoSuchStock = 2
+    AlreadySubscribed = 3
+
+
+class UnsubscriptionUserToStockResult(Enum):
+    Ok = 1
+    NotSubscribed = 2
 
 
 class UserSubscription(Base):
@@ -27,61 +39,63 @@ class SubscriptionsManager:
         self.Session = sessionmaker(bind=self.engine)
         self.create_tables()
 
-    def create_tables(self):
+    def create_tables(self) -> None:
         # Создание необходимых таблиц в базе данных
         Base.metadata.create_all(self.engine, checkfirst=True)
         stock_manager = StocksPricesManager()
         stock_manager.create_tables()
 
-    async def subscribe_user_to_stock(self, user_id: int, stock_symbol: str):
+    async def subscribe_user_to_stock(
+        self, user_id: int, stock_symbol: str
+    ) -> SubscriptionUserToStockResult:
         session = self.Session()
         try:
             stock_manager = StocksPricesManager()
 
-            # Проверка, существует ли символ акции в таблице stocks_prices
-            if stock_manager.stock_exists(stock_symbol):
-                existing_subscription = (
-                    session.query(UserSubscription)
-                    .filter_by(user_id=user_id, stock_symbol=stock_symbol)
-                    .first()
-                )
+            if not stock_manager.stock_exists(stock_symbol):
+                return SubscriptionUserToStockResult.NoSuchStock
 
-                # Проверка, не подписан ли пользователь уже
-                if not existing_subscription:
-                    # Добавление подписки в таблицу user_subscriptions
-                    subscription = UserSubscription(
-                        user_id=user_id, stock_symbol=stock_symbol
-                    )
-                    session.merge(subscription)
-                    session.commit()
-            else:
-                # Если символ акции не существует, добавляем его в таблицу stocks_prices
-                stock_data = yf.download(stock_symbol, period="1d", interval="1m")
-                current_price = stock_data["Close"].iloc[-1]
-                stock_manager.add_stock_price(
-                    symbol=stock_symbol, current_price=current_price
-                )
+            existing_subscription = (
+                session.query(UserSubscription)
+                .filter_by(user_id=user_id, stock_symbol=stock_symbol)
+                .first()
+            )
+            if existing_subscription:
+                return SubscriptionUserToStockResult.AlreadySubscribed
 
-                # Добавление подписки в таблицу user_subscriptions
-                subscription = UserSubscription(
-                    user_id=user_id, stock_symbol=stock_symbol
-                )
-                session.merge(subscription)
-                session.commit()
+            # Подписываем пользователя
+            subscription = UserSubscription(user_id=user_id, stock_symbol=stock_symbol)
+            session.merge(subscription)
+            session.commit()
+            return SubscriptionUserToStockResult.Ok
+
         finally:
             session.close()
+            return SubscriptionUserToStockResult.Ok
 
     # Отмена подписки пользователя на акцию
-    def unsubscribe_user_from_stock(self, user_id: int, stock_symbol: str):
+    def unsubscribe_user_from_stock(
+        self, user_id: int, stock_symbol: str
+    ) -> UnsubscriptionUserToStockResult:
         session = self.Session()
         try:
+            subscription = (
+                session.query(UserSubscription)
+                .filter_by(user_id=user_id, stock_symbol=stock_symbol)
+                .first()
+            )
+            if not subscription:
+                return UnsubscriptionUserToStockResult.NotSubscribed
             # Отмена подписки пользователя на акцию
             session.query(UserSubscription).filter_by(
                 user_id=user_id, stock_symbol=stock_symbol
             ).delete()
             session.commit()
+            return UnsubscriptionUserToStockResult.Ok
+
         finally:
             session.close()
+            return UnsubscriptionUserToStockResult.Ok
 
     # Получение списка акций, на которые подписан пользователь
     def get_user_subscriptions(self, user_id: int) -> List[str]:
@@ -102,8 +116,12 @@ class SubscriptionsManager:
         session = self.Session()
         try:
             # Для извлечения ид пользователей
-            users = [sub.user_id for sub in
-                     session.query(UserSubscription.user_id).filter_by(stock_symbol=stock_symbol).all()]
+            users = [
+                sub.user_id
+                for sub in session.query(UserSubscription.user_id)
+                .filter_by(stock_symbol=stock_symbol)
+                .all()
+            ]
             return users
         finally:
             session.close()

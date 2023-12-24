@@ -5,6 +5,10 @@ from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from crypto_prices_manager import CryptoPricesManager
+from subscription_enum_result import (
+    SubscriptionUserToCryptoResult,
+    UnsubscriptionUserFromCryptoResult,
+)
 
 Base = declarative_base()
 

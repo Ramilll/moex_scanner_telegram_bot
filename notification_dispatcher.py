@@ -1,5 +1,9 @@
 from crypto_prices_manager import CryptoPricesManager
 from subscriptions_manager import SubscriptionsManager
+from subscription_enum_result import (
+    SubscriptionUserToCryptoResult,
+    UnsubscriptionUserToCryptoResult,
+)
 
 
 class NotificationDispatcher:
@@ -12,13 +16,16 @@ class NotificationDispatcher:
         self.last_crypto_prices = self.crypto_prices_manager.get_crypto_prices()
         # TODO(rnazmeev): send notifications about price changes
 
-    def subscribe_user_to_crypto(self, user_id: int, crypto_symbol: str):
+    def subscribe_user_to_crypto(
+        self, user_id: int, crypto_symbol: str
+    ) -> SubscriptionUserToCryptoResult:
         return self.subscriptions_manager.subscribe_user_to_crypto(
             user_id, crypto_symbol
         )
 
-
-    def get_last_crypto_price(self, crypto_symbol: str):
+    def get_last_crypto_price(
+        self, crypto_symbol: str
+    ) -> UnsubscriptionUserToCryptoResult:
         return self.last_crypto_prices[crypto_symbol]
 
     def unsubscribe_user_from_crypto(self, user_id: int, crypto_symbol: str):

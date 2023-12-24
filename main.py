@@ -6,7 +6,7 @@ from telegram.ext import CallbackContext, CommandHandler, Updater
 from notification_dispatcher import NotificationDispatcher
 from subscriptions_manager import (
     SubscriptionUserToCryptoResult,
-    UnsubscriptionUserToCryptoResult,
+    UnsubscriptionUserFromCryptoResult,
 )
 
 logging.basicConfig(
@@ -96,12 +96,12 @@ class CryptoBot:
                 )
             )
             match unsubscription_result:
-                case UnsubscriptionUserToCryptoResult.NotSubscribed:
+                case UnsubscriptionUserFromCryptoResult.NotSubscribed:
                     context.bot.send_message(
                         chat_id=chat_id,
                         text="Вы не подписаны на акцию {}.".format(crypto_name),
                     )
-                case UnsubscriptionUserToCryptoResult.Ok:
+                case UnsubscriptionUserFromCryptoResult.Ok:
                     context.bot.send_message(
                         chat_id=chat_id,
                         text="Отписали Вас от акции {}.".format(crypto_name),

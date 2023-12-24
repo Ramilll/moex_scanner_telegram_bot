@@ -1,7 +1,7 @@
 from crypto_prices_manager import CryptoPricesManager
 from subscription_enum_result import (
     SubscriptionUserToCryptoResult,
-    UnsubscriptionUserToCryptoResult,
+    UnsubscriptionUserFromCryptoResult,
 )
 from subscriptions_manager import SubscriptionsManager
 
@@ -25,7 +25,7 @@ class NotificationDispatcher:
 
     def get_last_crypto_price(
         self, crypto_symbol: str
-    ) -> UnsubscriptionUserToCryptoResult:
+    ) -> UnsubscriptionUserFromCryptoResult:
         return self.last_crypto_prices[crypto_symbol]
 
     def unsubscribe_user_from_crypto(self, user_id: int, crypto_symbol: str):

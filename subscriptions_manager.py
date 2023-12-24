@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import Dict, List
 
 import yfinance as yf
@@ -8,17 +7,6 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from crypto_prices_manager import CryptoPricesManager
 
 Base = declarative_base()
-
-
-class SubscriptionUserToCryptoResult(Enum):
-    Ok = 1
-    NoSuchCrypto = 2
-    AlreadySubscribed = 3
-
-
-class UnsubscriptionUserToCryptoResult(Enum):
-    Ok = 1
-    NotSubscribed = 2
 
 
 class UserSubscription(Base):
@@ -74,7 +62,7 @@ class SubscriptionsManager:
     # Отмена подписки пользователя на акцию
     def unsubscribe_user_from_crypto(
         self, user_id: int, crypto_symbol: str
-    ) -> UnsubscriptionUserToCryptoResult:
+    ) -> UnsubscriptionUserFromCryptoResult:
         session = self.Session()
         try:
             subscription = (
@@ -83,13 +71,13 @@ class SubscriptionsManager:
                 .first()
             )
             if not subscription:
-                return UnsubscriptionUserToCryptoResult.NotSubscribed
+                return UnsubscriptionUserFromCryptoResult.NotSubscribed
             # Отмена подписки пользователя на акцию
             session.query(UserSubscription).filter_by(
                 user_id=user_id, crypto_symbol=crypto_symbol
             ).delete()
             session.commit()
-            return UnsubscriptionUserToCryptoResult.Ok
+            return UnsubscriptionUserFromCryptoResult.Ok
 
         finally:
             session.close()

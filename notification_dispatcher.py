@@ -17,10 +17,11 @@ class NotificationDispatcher:
             user_id, crypto_symbol
         )
 
+
     def get_last_crypto_price(self, crypto_symbol: str):
         return self.last_crypto_prices[crypto_symbol]
 
-    def unsubscribe_user_to_crypto(self, user_id: int, crypto_symbol: str):
+    def unsubscribe_user_from_crypto(self, user_id: int, crypto_symbol: str):
         return self.subscriptions_manager.unsubscribe_user_to_crypto(
             user_id, crypto_symbol
         )

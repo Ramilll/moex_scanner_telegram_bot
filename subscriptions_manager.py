@@ -70,7 +70,6 @@ class SubscriptionsManager:
 
         finally:
             session.close()
-            return SubscriptionUserToCryptoResult.Ok
 
     # Отмена подписки пользователя на акцию
     def unsubscribe_user_from_crypto(
@@ -94,7 +93,6 @@ class SubscriptionsManager:
 
         finally:
             session.close()
-            return UnsubscriptionUserToCryptoResult.Ok
 
     # Получение списка акций, на которые подписан пользователь
     def get_user_subscriptions(self, user_id: int) -> List[str]:

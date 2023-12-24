@@ -71,7 +71,6 @@ class CryptoBot:
                         text="Вы уже подписаны на акцию {}.".format(crypto_name),
                     )
                 case SubscriptionUserToCryptoResult.Ok:
-                    self.user_subscriptions[chat_id].add(crypto_name)
                     context.bot.send_message(
                         chat_id=chat_id,
                         text="Подписали Вас на акцию {}.".format(crypto_name),
@@ -92,7 +91,7 @@ class CryptoBot:
 
         for crypto_name in context.args:
             unsubscription_result = (
-                self.notification_dispatcher.unsubscribe_user_to_crypto(
+                self.notification_dispatcher.unsubscribe_user_from_crypto(
                     chat_id, crypto_name
                 )
             )

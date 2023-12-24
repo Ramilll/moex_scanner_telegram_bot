@@ -33,15 +33,14 @@ class CryptoPricesManager:
 
     # Обновляет цены всех акции на таблице crypto_prices
     def update_all_crypto(self):
-        while True:
-            try:
-                price_by_symbol = self.crypto_fetcher.fetch_top_coins_prices()
-                for symbol in price_by_symbol:
-                    self._add_crypto_price(symbol, price_by_symbol[symbol])
-                self.cnt_update_all_crypto_calls += 1
+        try:
+            price_by_symbol = self.crypto_fetcher.fetch_top_coins_prices()
+            for symbol in price_by_symbol:
+                self._add_crypto_price(symbol, price_by_symbol[symbol])
+            self.cnt_update_all_crypto_calls += 1
 
-            except Exception as e:
-                print(f"Error updating crypto prices: {e}")
+        except Exception as e:
+            print(f"Error updating crypto prices: {e}")
 
     # Получает все названий тикеров
     def get_all_crypto_symbols(self) -> Set[str]:

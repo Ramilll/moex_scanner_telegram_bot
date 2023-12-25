@@ -1,5 +1,5 @@
-import logging
 import datetime
+import logging
 
 from telegram import Update
 from telegram.ext import CallbackContext, CommandHandler, Updater
@@ -31,17 +31,19 @@ class CryptoBot:
         """
 
     def start(self, update: Update, context: CallbackContext) -> None:
-        context.chat_data['chat_id'] = update.message.chat_id
+        context.chat_data["chat_id"] = update.message.chat_id
         context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="Привет! Я лучший бот-помощник по акциям Yahoo! Finance. "
-            + self.kHelpText
+            + self.kHelpText,
         )
         self.schedule_job(context)
-    
+
     def schedule_job(self, context: CallbackContext) -> None:
-        chat_id = context.chat_data.get('chat_id')
-        context.job_queue.run_repeating(self.run_update, datetime.timedelta(seconds=10), context=chat_id)
+        chat_id = context.chat_data.get("chat_id")
+        context.job_queue.run_repeating(
+            self.run_update, datetime.timedelta(seconds=10), context=chat_id
+        )
 
     def help(self, update: Update, context: CallbackContext) -> None:
         context.bot.send_message(chat_id=update.effective_chat.id, text=self.kHelpText)
@@ -77,10 +79,16 @@ class CryptoBot:
                         text="Вы уже подписаны на токен {}.".format(crypto_name),
                     )
                 case SubscriptionUserToCryptoResult.Ok:
-                    current_crypto_price = self.notification_dispatcher.init_subscription_get_price(chat_id, crypto_name)
+                    current_crypto_price = (
+                        self.notification_dispatcher.init_subscription_get_price(
+                            chat_id, crypto_name
+                        )
+                    )
                     context.bot.send_message(
                         chat_id=chat_id,
-                        text="Подписали Вас на токен {}, текущая цена - {}.".format(crypto_name, current_crypto_price),
+                        text="Подписали Вас на токен {}, текущая цена - {}.".format(
+                            crypto_name, current_crypto_price
+                        ),
                     )
 
     def unsubscribe(self, update: Update, context: CallbackContext) -> None:
@@ -126,18 +134,24 @@ class CryptoBot:
             context.bot.send_message(
                 chat_id=chat_id, text="Вы пока не подписаны ни на один токен."
             )
-    
+
     def run_update(self, context: CallbackContext) -> None:
-        chat_id=context.job.context
-        updates = self.notification_dispatcher.update()
-        for update in updates:
-            if update.user_id != chat_id:
-                continue
-            context.bot.send_message(chat_id=chat_id, text='Цена на токен {} была {}, стала {}. Поменялась на {}%'.format(
-                update.symbol_name, update.last_sent_price, update.cur_price, update.pct_change
-            ))
-        if not updates:
-            context.bot.send_message(chat_id=chat_id, text='No updates')
+        notification_updates = self.notification_dispatcher.update()
+        for update in notification_updates:
+            print(
+                f"Update for user_id={update.user_id}, symbol={update.symbol_name}, last_sent_price={update.last_sent_price}, cur_price={update.cur_price}, pct_change={update.pct_change}"
+            )
+
+        for update in notification_updates:
+            context.bot.send_message(
+                chat_id=update.user_id,
+                text="Цена на токен {} была {}, стала {}. Поменялась на {}%".format(
+                    update.symbol_name,
+                    update.last_sent_price,
+                    update.cur_price,
+                    update.pct_change,
+                ),
+            )
 
     def run(self):
         updater = Updater(self.token, use_context=True)

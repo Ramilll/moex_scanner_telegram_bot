@@ -25,7 +25,7 @@ class SubscriptionsManager:
     def __init__(self, database_url="sqlite:///subscription_data.db"):
         # Инициализация менеджера подписок с указанием базы данных
         self.engine = create_engine(
-            database_url, echo=True, connect_args={"check_same_thread": False}
+            database_url, echo=False, connect_args={"check_same_thread": False}
         )
         self.Session = sessionmaker(bind=self.engine)
         self._create_tables()

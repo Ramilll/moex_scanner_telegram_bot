@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from typing import Dict, List
 
@@ -40,7 +41,7 @@ class NotificationDispatcher:
 
         self._initial_update()
 
-        self.MIN_PCT_CHANGE_TO_NOTIFY = 0.1  # (in percents)
+        self.MIN_PCT_CHANGE_TO_NOTIFY = 0.01  # (in percents)
 
     def _initial_update(self) -> None:
         self.crypto_prices_manager.update_all_crypto()
@@ -57,20 +58,18 @@ class NotificationDispatcher:
 
         for symbol in cur_prices_by_symbol:
             for (
-                subscriber
+                subscriber_id
             ) in self.subscriptions_manager.get_all_subscribed_users_to_crypto(symbol):
-                last_update_result = self.update_result_by_user_id.get(
-                    subscriber
-                )
+                last_update_result = self.update_result_by_user_id.get(subscriber_id)
 
                 # we expect that last_update_result is not None (user has received )
                 if not last_update_result:
-                    print(f"Unexpected error for user_id={subscriber}")
+                    print(f"Unexpected error for user_id={subscriber_id}")
                     continue
 
                 if not last_update_result.is_symbol_sent(symbol):
                     # we expect that user has subscribed to this symbol
-                    print(f"Unexpected error for user_id={subscriber}")
+                    print(f"Unexpected error for user_id={subscriber_id}")
                     continue
 
                 last_sent_price = last_update_result.get_last_sent_price(symbol)
@@ -80,7 +79,7 @@ class NotificationDispatcher:
                 if pct_change >= self.MIN_PCT_CHANGE_TO_NOTIFY:
                     notifications.append(
                         NotificationUpdate(
-                            user_id=subscriber,
+                            user_id=subscriber_id,
                             last_sent_price=last_sent_price,
                             cur_price=cur_price,
                             pct_change=pct_change,
@@ -104,7 +103,8 @@ class NotificationDispatcher:
             crypto_symbol
         ]
         # init Update result
-        self.update_result_by_user_id[user_id] = SubscrberUpdateResult()
+        if user_id not in self.update_result_by_user_id:
+            self.update_result_by_user_id[user_id] = SubscrberUpdateResult()
         self.update_result_by_user_id[user_id].set_last_sent_price(
             crypto_symbol, last_symbol_price
         )

@@ -1,4 +1,5 @@
 import logging
+import datetime
 
 from telegram import Update
 from telegram.ext import CallbackContext, CommandHandler, Updater
@@ -23,19 +24,24 @@ class CryptoBot:
         self.user_subscriptions: dict[str, set[str]] = {}
         self.notification_dispatcher = NotificationDispatcher()
         self.kHelpText = """Вот что я умею:\n
-        /subscribe <имена-акций> <через-пробел> – подписаться на акции <имена-акций> <через-пробел>. Если Вы уже подписаны на такие акции, повторно мы Вас подписывать не будем.\n
-        /unsubscribe <имена-акций> <через-пробел> – отписаться от акции <имена-акций> <через-пробел>. Если Вы на какие-то из не подписаны, мы сообщим Вам об этом.\n
-        /my_crypto - вывод списка акций, на которые Вы подписаны.\n
-        /crypto_info <имя-акции> - Рамиль расскажет что тут будет.\n
+        /subscribe <имена-токенов> <через-пробел> – подписаться на токены <имена-токенов> <через-пробел>. Если Вы уже подписаны на такие токены, повторно мы Вас подписывать не будем.\n
+        /unsubscribe <имена-токенов> <через-пробел> – отписаться от токены <имена-токенов> <через-пробел>. Если Вы на какие-то из них не подписаны, мы сообщим Вам об этом.\n
+        /my_crypto - вывод списка токенов, на которые Вы подписаны.\n
         /help - вывод этого сообщения.
         """
 
     def start(self, update: Update, context: CallbackContext) -> None:
+        context.chat_data['chat_id'] = update.message.chat_id
         context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="Привет! Я лучший бот-помощник по акциям Yahoo! Finance. "
-            + self.kHelpText,
+            + self.kHelpText
         )
+        self.schedule_job(context)
+    
+    def schedule_job(self, context: CallbackContext) -> None:
+        chat_id = context.chat_data.get('chat_id')
+        context.job_queue.run_repeating(self.run_update, datetime.timedelta(seconds=10), context=chat_id)
 
     def help(self, update: Update, context: CallbackContext) -> None:
         context.bot.send_message(chat_id=update.effective_chat.id, text=self.kHelpText)
@@ -45,11 +51,11 @@ class CryptoBot:
         if not context.args:
             context.bot.send_message(
                 chat_id=chat_id,
-                text="Вы не указали имя акций, на которые хотите подписаться.",
+                text="Вы не указали имена токенов, на которые хотите подписаться.",
             )
             context.bot.send_message(
                 chat_id=chat_id,
-                text="Пожалуйста, отправьте сообщение в формате: /subscribe <имена-акций> <через-пробел>",
+                text="Пожалуйста, отправьте сообщение в формате: /subscribe <имена-токенов> <через-пробел>",
             )
             return
 
@@ -61,20 +67,20 @@ class CryptoBot:
                 case SubscriptionUserToCryptoResult.NoSuchCrypto:
                     context.bot.send_message(
                         chat_id=chat_id,
-                        text="К сожалению, мы не следим за акцией {}.".format(
+                        text="К сожалению, мы не следим за токеном {}.".format(
                             crypto_name
                         ),
                     )
                 case SubscriptionUserToCryptoResult.AlreadySubscribed:
                     context.bot.send_message(
                         chat_id=chat_id,
-                        text="Вы уже подписаны на акцию {}.".format(crypto_name),
+                        text="Вы уже подписаны на токен {}.".format(crypto_name),
                     )
                 case SubscriptionUserToCryptoResult.Ok:
                     current_crypto_price = self.notification_dispatcher.init_subscription_get_price(chat_id, crypto_name)
                     context.bot.send_message(
                         chat_id=chat_id,
-                        text="Подписали Вас на акцию {}, текущая цена - {}.".format(crypto_name, current_crypto_price),
+                        text="Подписали Вас на токен {}, текущая цена - {}.".format(crypto_name, current_crypto_price),
                     )
 
     def unsubscribe(self, update: Update, context: CallbackContext) -> None:
@@ -82,11 +88,11 @@ class CryptoBot:
         if not context.args:
             context.bot.send_message(
                 chat_id=chat_id,
-                text="Вы не указали имя акций, от которых хотите отписаться.",
+                text="Вы не указали имена токенов, от которых хотите отписаться.",
             )
             context.bot.send_message(
                 chat_id=chat_id,
-                text="Пожалуйста, отправьте сообщение в формате: /unsubscribe <имена-акций> <через-пробел>",
+                text="Пожалуйста, отправьте сообщение в формате: /unsubscribe <имена-токенов> <через-пробел>",
             )
             return
 
@@ -100,12 +106,12 @@ class CryptoBot:
                 case UnsubscriptionUserFromCryptoResult.NotSubscribed:
                     context.bot.send_message(
                         chat_id=chat_id,
-                        text="Вы не подписаны на акцию {}.".format(crypto_name),
+                        text="Вы не подписаны на токен {}.".format(crypto_name),
                     )
                 case UnsubscriptionUserFromCryptoResult.Ok:
                     context.bot.send_message(
                         chat_id=chat_id,
-                        text="Отписали Вас от акции {}.".format(crypto_name),
+                        text="Отписали Вас от токена {}.".format(crypto_name),
                     )
 
     def my_crypto(self, update: Update, context: CallbackContext) -> None:
@@ -114,12 +120,24 @@ class CryptoBot:
         if subscriptions:
             context.bot.send_message(
                 chat_id=chat_id,
-                text="Вы подписаны на акции: {}".format(", ".join(subscriptions)),
+                text="Вы подписаны на токены: {}".format(", ".join(subscriptions)),
             )
         else:
             context.bot.send_message(
-                chat_id=chat_id, text="Вы пока не подписаны ни на одну акцию."
+                chat_id=chat_id, text="Вы пока не подписаны ни на один токен."
             )
+    
+    def run_update(self, context: CallbackContext) -> None:
+        chat_id=context.job.context
+        updates = self.notification_dispatcher.update()
+        for update in updates:
+            if update.user_id != chat_id:
+                continue
+            context.bot.send_message(chat_id=chat_id, text='Цена на токен {} была {}, стала {}. Поменялась на {}%'.format(
+                update.symbol_name, update.last_sent_price, update.cur_price, update.pct_change
+            ))
+        if not updates:
+            context.bot.send_message(chat_id=chat_id, text='No updates')
 
     def run(self):
         updater = Updater(self.token, use_context=True)
@@ -130,7 +148,6 @@ class CryptoBot:
         dp.add_handler(CommandHandler("subscribe", self.subscribe))
         dp.add_handler(CommandHandler("unsubscribe", self.unsubscribe))
         dp.add_handler(CommandHandler("my_crypto", self.my_crypto))
-        # dp.add_handler(CommandHandler("info", self.info))
 
         updater.start_polling()
         updater.idle()

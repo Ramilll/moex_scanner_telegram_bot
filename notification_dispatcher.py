@@ -29,6 +29,7 @@ class NotificationUpdate:
     last_sent_price: float
     cur_price: float
     pct_change: float
+    symbol_name: str
 
 
 class NotificationDispatcher:
@@ -83,6 +84,7 @@ class NotificationDispatcher:
                             last_sent_price=last_sent_price,
                             cur_price=cur_price,
                             pct_change=pct_change,
+                            symbol_name=symbol,
                         )
                     )
                     last_update_result.set_last_sent_price(symbol, cur_price)

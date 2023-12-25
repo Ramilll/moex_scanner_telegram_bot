@@ -34,7 +34,7 @@ class CryptoBot:
         context.chat_data["chat_id"] = update.message.chat_id
         context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="Привет! Я лучший бот-помощник по акциям Yahoo! Finance. "
+            text="Привет! Я лучший бот-помощник по токенам CoinMarketCap! "
             + self.kHelpText,
         )
         self.schedule_job(context)

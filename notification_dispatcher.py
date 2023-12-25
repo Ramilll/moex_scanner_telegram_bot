@@ -60,17 +60,17 @@ class NotificationDispatcher:
                 subscriber
             ) in self.subscriptions_manager.get_all_subscribed_users_to_crypto(symbol):
                 last_update_result = self.update_result_by_user_id.get(
-                    subscriber.user_id
+                    subscriber
                 )
 
                 # we expect that last_update_result is not None (user has received )
                 if not last_update_result:
-                    print(f"Unexpected error for user_id={subscriber.user_id}")
+                    print(f"Unexpected error for user_id={subscriber}")
                     continue
 
                 if not last_update_result.is_symbol_sent(symbol):
                     # we expect that user has subscribed to this symbol
-                    print(f"Unexpected error for user_id={subscriber.user_id}")
+                    print(f"Unexpected error for user_id={subscriber}")
                     continue
 
                 last_sent_price = last_update_result.get_last_sent_price(symbol)
@@ -80,7 +80,7 @@ class NotificationDispatcher:
                 if pct_change >= self.MIN_PCT_CHANGE_TO_NOTIFY:
                     notifications.append(
                         NotificationUpdate(
-                            user_id=subscriber.user_id,
+                            user_id=subscriber,
                             last_sent_price=last_sent_price,
                             cur_price=cur_price,
                             pct_change=pct_change,

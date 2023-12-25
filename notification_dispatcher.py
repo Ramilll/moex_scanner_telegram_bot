@@ -74,9 +74,9 @@ class NotificationDispatcher:
 
                 last_sent_price = last_update_result.get_last_sent_price(symbol)
                 cur_price = cur_prices_by_symbol[symbol]
-                pct_change = abs((cur_price - last_sent_price) / last_sent_price * 100)
+                pct_change = (cur_price - last_sent_price) / last_sent_price * 100
 
-                if pct_change >= self.MIN_PCT_CHANGE_TO_NOTIFY:
+                if abs(pct_change) >= self.MIN_PCT_CHANGE_TO_NOTIFY:
                     notifications.append(
                         NotificationUpdate(
                             user_id=subscriber_id,
